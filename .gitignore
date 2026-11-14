@@ -40,3 +40,7 @@ next-env.d.ts
 /dev.db-journal
 *.db
 *.db-journal
+
+# user uploads written at runtime by /api/upload (do not commit user content)
+/public/uploads/*
+!/public/uploads/.gitkeep
