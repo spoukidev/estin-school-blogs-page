@@ -170,7 +170,7 @@ export default function PublicProfilePage() {
                 ) : blogs.length === 0 ? (
                     <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-dashed border-gray-200 dark:border-gray-700">
                         <p className="text-gray-500 dark:text-gray-400 text-lg">
-                            This user hasn't written any posts yet.
+                            This user hasn&apos;t written any posts yet.
                         </p>
                     </div>
                 ) : (

@@ -475,7 +475,7 @@ export default function Home() {
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Contact Us</h2>
                         <p className="mt-2 text-lg leading-8 text-gray-600 dark:text-gray-300">
-                            Have questions or suggestions? We'd love to hear from you.
+                            Have questions or suggestions? We&apos;d love to hear from you.
                         </p>
                     </div>
                     <form className="mx-auto mt-16 max-w-xl sm:mt-20">
@@ -662,7 +662,7 @@ export default function Home() {
                         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
                             {authMode === 'signin' ? (
                                 <>
-                                    Don't have an account?{' '}
+                                    Don&apos;t have an account?{' '}
                                     <button onClick={() => openAuth('signup')} className="text-blue-600 hover:underline font-medium">
                                         Sign up
                                     </button>
