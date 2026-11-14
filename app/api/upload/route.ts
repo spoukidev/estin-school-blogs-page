@@ -1,8 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
+import { randomUUID } from 'crypto'
 import path from 'path'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+// Only raster images are accepted (the UI only offers image/*). SVG is excluded
+// because it can carry script and is served from the same origin.
+const ALLOWED_TYPES: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+}
+
+function hasExpectedSignature(buffer: Buffer, mime: string): boolean {
+    switch (mime) {
+        case 'image/jpeg':
+            return buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
+        case 'image/png':
+            return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+        case 'image/gif':
+            return buffer.subarray(0, 4).toString('ascii') === 'GIF8'
+        case 'image/webp':
+            return buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+        default:
+            return false
+    }
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -12,20 +39,29 @@ export async function POST(req: NextRequest) {
         }
 
         const formData = await req.formData()
-        const file = formData.get('file') as File
+        const file = formData.get('file')
 
-        if (!file) {
+        if (!file || typeof file === 'string') {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer())
-        const filename = Date.now() + '_' + file.name.replace(/\s/g, '_')
-        const uploadDir = path.join(process.cwd(), 'public/uploads')
+        const extension = ALLOWED_TYPES[file.type]
+        if (!extension) {
+            return NextResponse.json({ error: 'Only JPEG, PNG, GIF or WebP images are allowed' }, { status: 415 })
+        }
 
-        // Ensure upload directory exists (in a real app, you'd check/create this on startup)
-        // For now, we assume public/uploads exists or we'd use fs.mkdir
-        // But since we can't easily run mkdir here without more code, let's try to write.
-        // If it fails, we might need to create the dir.
+        if (file.size > MAX_UPLOAD_BYTES) {
+            return NextResponse.json({ error: 'File is too large (max 5 MB)' }, { status: 413 })
+        }
+
+        const buffer = Buffer.from(await file.arrayBuffer())
+        if (!hasExpectedSignature(buffer, file.type)) {
+            return NextResponse.json({ error: 'File content does not match its image type' }, { status: 415 })
+        }
+
+        // Never use the client-supplied name on disk: it can contain path separators.
+        const filename = `${Date.now()}_${randomUUID()}${extension}`
+        const uploadDir = path.join(process.cwd(), 'public/uploads')
 
         try {
             await mkdir(uploadDir, { recursive: true })
