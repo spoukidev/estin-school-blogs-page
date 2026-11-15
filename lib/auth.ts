@@ -45,18 +45,30 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.role = user.role
         token.bio = user.bio
       }
 
-      if (trigger === "update" && session?.user) {
-        token.name = session.user.name
-        token.email = session.user.email
-        token.picture = session.user.image
-        token.bio = session.user.bio
+      // The payload passed to useSession().update() comes from the browser and
+      // must not be trusted: API routes look users up by session email, so
+      // copying a client-supplied email/role into the token would let anyone
+      // impersonate another account (including an admin). Re-read the
+      // profile from the database instead.
+      if (trigger === "update" && token.id) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, email: true, image: true, bio: true, role: true },
+        })
+        if (fresh) {
+          token.name = fresh.name
+          token.email = fresh.email
+          token.picture = fresh.image
+          token.bio = fresh.bio
+          token.role = fresh.role
+        }
       }
 
       return token
