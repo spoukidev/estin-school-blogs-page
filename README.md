@@ -1,5 +1,7 @@
 # Estin Blog
 
+[![CI](https://github.com/spoukidev/estin-school-blogs-page/actions/workflows/ci.yml/badge.svg)](https://github.com/spoukidev/estin-school-blogs-page/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A modern blogging platform for Estin students and teachers to share their thoughts, experiences, and knowledge.
 
 ## Features
