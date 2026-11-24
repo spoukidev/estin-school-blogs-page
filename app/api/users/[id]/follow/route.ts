@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -14,7 +14,7 @@ export async function POST(
         }
 
         const followerId = session.user.id
-        const followingId = params.id
+        const { id: followingId } = await params
 
         if (followerId === followingId) {
             return NextResponse.json(
@@ -75,7 +75,7 @@ export async function POST(
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions)
@@ -84,7 +84,7 @@ export async function GET(
         }
 
         const followerId = session.user.id
-        const followingId = params.id
+        const { id: followingId } = await params
 
         const follow = await prisma.follow.findUnique({
             where: {
