@@ -3,10 +3,11 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { searchParams } = new URL(req.url)
     const type = searchParams.get('type') // 'followers' or 'following'
+    const { id } = await params
 
     if (!type || (type !== 'followers' && type !== 'following')) {
         return NextResponse.json(
@@ -19,7 +20,7 @@ export async function GET(
         let users
         if (type === 'followers') {
             const follows = await prisma.follow.findMany({
-                where: { followingId: params.id },
+                where: { followingId: id },
                 include: {
                     follower: {
                         select: {
@@ -35,7 +36,7 @@ export async function GET(
             users = follows.map((f) => f.follower)
         } else {
             const follows = await prisma.follow.findMany({
-                where: { followerId: params.id },
+                where: { followerId: id },
                 include: {
                     following: {
                         select: {
